@@ -20,7 +20,7 @@ func main() {
 	// Simple API endpoint
 	http.HandleFunc("/api/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		resp := map[string]string{"message": "\n\nHello from the Go backend on App Engine"}
+		resp := map[string]string{"message": "\nHello from the Go backend on App Engine"}
 		_ = json.NewEncoder(w).Encode(resp)
 	})
 

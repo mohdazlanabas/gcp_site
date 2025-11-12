@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"path/filepath"
-	"sync"
 	"time"
+
+	"example.com/my-app/database"
+	"github.com/jackc/pgx/v5"
 )
 
 // Message represents a stored message
@@ -16,63 +19,75 @@ type Message struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// MessageStore holds messages in memory
-type MessageStore struct {
-	messages []Message
-	nextID   int
-	mu       sync.RWMutex
-}
+// dbConn is the global database connection pool
+var dbConn *pgx.Conn
 
-var store = &MessageStore{
-	messages: make([]Message, 0),
-	nextID:   1,
-}
-
-// AddMessage adds a new message and returns it
-func (ms *MessageStore) AddMessage(content string) Message {
-	ms.mu.Lock()
-	defer ms.mu.Unlock()
-
+// AddMessage adds a new message to the database
+func AddMessage(ctx context.Context, content string) (Message, error) {
 	msg := Message{
-		ID:        ms.nextID,
 		Content:   content,
 		Timestamp: time.Now(),
 	}
 
-	ms.messages = append(ms.messages, msg)
-	ms.nextID++
+	query := "INSERT INTO messages (content, timestamp) VALUES ($1, $2) RETURNING id"
+	err := dbConn.QueryRow(ctx, query, msg.Content, msg.Timestamp).Scan(&msg.ID)
+	if err != nil {
+		return Message{}, fmt.Errorf("failed to insert message: %w", err)
+	}
 
-	return msg
+	return msg, nil
 }
 
-// GetRecentMessages returns the last N messages
-func (ms *MessageStore) GetRecentMessages(count int) []Message {
-	ms.mu.RLock()
-	defer ms.mu.RUnlock()
+// GetRecentMessages returns the last N messages from the database
+func GetRecentMessages(ctx context.Context, count int) ([]Message, error) {
+	var messages []Message
+	query := "SELECT id, content, timestamp FROM messages ORDER BY timestamp DESC LIMIT $1"
+	rows, err := dbConn.Query(ctx, query, count)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query recent messages: %w", err)
+	}
+	defer rows.Close()
 
-	total := len(ms.messages)
-	if total == 0 {
-		return []Message{}
+	for rows.Next() {
+		var msg Message
+		if err := rows.Scan(&msg.ID, &msg.Content, &msg.Timestamp); err != nil {
+			return nil, fmt.Errorf("failed to scan message row: %w", err)
+		}
+		messages = append(messages, msg)
 	}
 
-	start := total - count
-	if start < 0 {
-		start = 0
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error after iterating through message rows: %w", err)
 	}
 
-	// Return a copy to avoid race conditions
-	result := make([]Message, total-start)
-	copy(result, ms.messages[start:])
-
-	// Reverse to show newest first
-	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
-		result[i], result[j] = result[j], result[i]
+	// Reverse the slice to show oldest first (as per original in-memory store behavior)
+	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+		messages[i], messages[j] = messages[j], messages[i]
 	}
 
-	return result
+	return messages, nil
 }
 
 func main() {
+	// Initialize database connection
+	var err error
+	dbConn, err = database.InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer func() {
+		if dbConn != nil {
+			dbConn.Close(context.Background())
+			log.Println("Database connection closed.")
+		}
+	}()
+
+	// Run database migrations
+	err = database.MigrateDB(dbConn)
+	if err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
+	}
+
 	// Serve static files from the frontend folder under /static/
 	fs := http.FileServer(http.Dir(filepath.Join("src", "frontend")))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -112,7 +127,13 @@ func main() {
 			}
 
 			// Add message to store
-			msg := store.AddMessage(req.Message)
+			msg, err := AddMessage(r.Context(), req.Message)
+			if err != nil {
+				log.Printf("Error adding message to DB: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Failed to save message"})
+				return
+			}
 
 			// Return success with the message
 			json.NewEncoder(w).Encode(map[string]interface{}{
@@ -122,7 +143,13 @@ func main() {
 
 		} else if r.Method == http.MethodGet {
 			// Get last 3 messages
-			messages := store.GetRecentMessages(3)
+			messages, err := GetRecentMessages(r.Context(), 3)
+			if err != nil {
+				log.Printf("Error getting recent messages from DB: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve messages"})
+				return
+			}
 
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"success":  true,

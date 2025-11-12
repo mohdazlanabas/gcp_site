@@ -9,12 +9,12 @@ import (
 
 func main() {
 	// Serve static files from the frontend folder under /static/
-	fs := http.FileServer(http.Dir(filepath.Join(".", "src", "frontend")))
+	fs := http.FileServer(http.Dir("frontend"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Serve root index.html
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join("src", "frontend", "index.html"))
+		http.ServeFile(w, r, filepath.Join("frontend", "index.html"))
 	})
 
 	// Simple API endpoint

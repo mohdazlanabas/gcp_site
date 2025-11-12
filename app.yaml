@@ -1,7 +1,6 @@
 runtime: go120
-service: default
+service: gcp_serve
 instance_class: F1
 
-# optional environment variables
 env_variables:
   EXAMPLE_ENV: "production"

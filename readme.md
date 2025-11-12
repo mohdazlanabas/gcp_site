@@ -7,10 +7,11 @@ A minimal, production-ready web application built with Go and deployed to Google
 ```
 gcp_site/
 ├── app.yaml              # App Engine configuration
+├── go.mod                # Go module definition
+├── main.go               # Go HTTP server and routing
+├── deploy.sh             # Deployment automation script
+├── cloudbuild.yaml       # Cloud Build config (archived)
 ├── src/
-│   ├── backend/          # Go backend server
-│   │   ├── main.go       # HTTP server and routing
-│   │   └── go.mod        # Go module definition
 │   └── frontend/         # Static web assets
 │       ├── index.html    # Main HTML page
 │       ├── scripts.js    # Client-side JavaScript
@@ -43,7 +44,6 @@ gcp_site/
 From the project root:
 
 ```bash
-cd src/backend
 go run main.go
 ```
 
@@ -58,7 +58,7 @@ Open your browser and navigate to:
 
 ### 3. Make Changes
 
-- Backend: Edit `src/backend/main.go`
+- Backend: Edit `main.go`
 - Frontend: Edit files in `src/frontend/`
 - Restart the server to see backend changes
 - Refresh the browser to see frontend changes
@@ -86,29 +86,53 @@ gcloud app create --region=asia-southeast2
 
 **Option 1: Automated Script (Recommended)**
 
-Use the included deployment script that commits, pushes to GitHub, and deploys:
+Use the included `deploy.sh` script for one-command deployment:
 
 ```bash
 ./deploy.sh "Your commit message here"
 ```
 
-This will:
-1. Add all changes to git
-2. Commit with your message
-3. Push to GitHub
-4. Deploy to App Engine
+The script automatically:
+1. Shows current git status
+2. Adds all changes to git staging
+3. Creates a commit with your message
+4. Pushes to GitHub (main branch)
+5. Deploys to App Engine
+6. Shows deployment success with app URL
 
-**Option 2: Manual Deployment**
+**Example:**
+```bash
+./deploy.sh "Add new feature to user dashboard"
+```
+
+**Option 2: Manual Step-by-Step**
+
+If you prefer manual control:
 
 ```bash
-# Commit and push to GitHub
+# 1. Check what files changed
+git status
+
+# 2. Stage your changes
 git add -A
-git commit -m "Your changes"
+
+# 3. Commit with a message
+git commit -m "Your descriptive message"
+
+# 4. Push to GitHub
 git push origin main
 
-# Deploy to App Engine
+# 5. Deploy to App Engine
 gcloud app deploy app.yaml --quiet
 ```
+
+### Deployment Workflow Notes
+
+- **No automatic CI/CD**: The project uses manual deployment workflow
+- **GitHub**: Used for version control only
+- **Cloud Build**: Currently disabled (see `cloudbuild.yaml` for details)
+- **Deployment Time**: Typically 2-3 minutes
+- **Current URL**: https://net1io-web-475001.et.r.appspot.com
 
 ### View Deployed Application
 
@@ -146,17 +170,18 @@ Serves static files (CSS, JS) from `src/frontend/`
 
 ### app.yaml
 
-The App Engine configuration file:
+The App Engine configuration file (in project root):
 
 ```yaml
 runtime: go122              # Go 1.22 runtime
 service: default            # Default service
 instance_class: F1          # Smallest instance (cost-effective)
-main: ./src/backend         # Path to main package
 
 env_variables:
   EXAMPLE_ENV: "production" # Environment variables
 ```
+
+The `main.go` file is located in the project root and serves static files from `src/frontend/`.
 
 ### go.mod
 
@@ -172,14 +197,12 @@ go 1.22
 ### Running Tests
 
 ```bash
-cd src/backend
 go test ./...
 ```
 
 ### Build Binary Locally
 
 ```bash
-cd src/backend
 go build -o app
 ./app
 ```

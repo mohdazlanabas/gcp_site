@@ -84,15 +84,29 @@ gcloud app create --region=asia-southeast2
 
 ### Deploy Application
 
-From the project root:
+**Option 1: Automated Script (Recommended)**
+
+Use the included deployment script that commits, pushes to GitHub, and deploys:
 
 ```bash
-gcloud app deploy app.yaml
+./deploy.sh "Your commit message here"
 ```
 
-Or with automatic confirmation:
+This will:
+1. Add all changes to git
+2. Commit with your message
+3. Push to GitHub
+4. Deploy to App Engine
+
+**Option 2: Manual Deployment**
 
 ```bash
+# Commit and push to GitHub
+git add -A
+git commit -m "Your changes"
+git push origin main
+
+# Deploy to App Engine
 gcloud app deploy app.yaml --quiet
 ```
 

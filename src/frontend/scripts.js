@@ -128,8 +128,152 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
+// Message Storage functionality
+const messageInput = document.getElementById('messageInput');
+const sendMessageBtn = document.getElementById('sendMessageBtn');
+const refreshMessagesBtn = document.getElementById('refreshMessagesBtn');
+const messagesContainer = document.getElementById('messagesContainer');
+
+// Send message
+async function sendMessage() {
+  const message = messageInput.value.trim();
+
+  if (!message) {
+    alert('Please enter a message');
+    return;
+  }
+
+  // Disable button during request
+  sendMessageBtn.disabled = true;
+  sendMessageBtn.classList.add('loading');
+
+  try {
+    const response = await fetch('/api/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Clear input
+      messageInput.value = '';
+
+      // Show success feedback
+      messageInput.placeholder = '✓ Message sent! Type another...';
+      setTimeout(() => {
+        messageInput.placeholder = 'Type your message here...';
+      }, 2000);
+
+      // Refresh messages to show the new one
+      await loadMessages();
+    } else {
+      alert('Error: ' + (data.error || 'Failed to send message'));
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+    alert('Failed to send message. Please try again.');
+  } finally {
+    sendMessageBtn.disabled = false;
+    sendMessageBtn.classList.remove('loading');
+    messageInput.focus();
+  }
+}
+
+// Load and display messages
+async function loadMessages() {
+  try {
+    const response = await fetch('/api/messages');
+    const data = await response.json();
+
+    if (data.success) {
+      displayMessages(data.messages);
+    } else {
+      console.error('Failed to load messages:', data.error);
+    }
+  } catch (error) {
+    console.error('Error loading messages:', error);
+  }
+}
+
+// Display messages in the UI
+function displayMessages(messages) {
+  if (!messages || messages.length === 0) {
+    messagesContainer.innerHTML = '<div class="no-messages">No messages yet. Be the first to send one! 📝</div>';
+    return;
+  }
+
+  // Build HTML for messages
+  let html = '';
+  messages.forEach((msg, index) => {
+    const date = new Date(msg.timestamp);
+    const timeAgo = getTimeAgo(date);
+    const formattedTime = date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    html += `
+      <div class="message-item">
+        <div class="message-header">
+          <span class="message-label">Past Message ${index + 1}</span>
+          <span class="message-time" title="${date.toLocaleString()}">${timeAgo}</span>
+        </div>
+        <div class="message-content">${escapeHtml(msg.content)}</div>
+        <div class="message-id">ID: ${msg.id} • ${formattedTime}</div>
+      </div>
+    `;
+  });
+
+  messagesContainer.innerHTML = html;
+}
+
+// Calculate time ago
+function getTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+  return `${Math.floor(seconds / 86400)} days ago`;
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Event listeners for message storage
+sendMessageBtn.addEventListener('click', sendMessage);
+
+refreshMessagesBtn.addEventListener('click', async () => {
+  refreshMessagesBtn.disabled = true;
+  refreshMessagesBtn.classList.add('loading');
+  await loadMessages();
+  refreshMessagesBtn.disabled = false;
+  refreshMessagesBtn.classList.remove('loading');
+});
+
+// Allow Enter key to send message
+messageInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+
+// Load messages on page load
+loadMessages();
+
 // Log app info to console
 console.log('%c🚀 Google Cloud App Engine', 'font-size: 20px; font-weight: bold; color: #2563eb;');
 console.log('%cPowered by Go 1.22', 'font-size: 14px; color: #64748b;');
 console.log('%cServed from: Singapore (asia-southeast2)', 'font-size: 14px; color: #64748b;');
 console.log('%cInstance: F1 Class', 'font-size: 14px; color: #64748b;');
+console.log('%c💾 Message Storage: In-Memory', 'font-size: 14px; color: #2563eb;');

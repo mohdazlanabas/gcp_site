@@ -441,6 +441,142 @@ footer {
   margin-left: 0.5rem;
 }
 
+/* Message Storage Styles */
+.message-input-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+}
+
+.message-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-family: var(--font-family);
+  transition: all 0.3s ease;
+  background: var(--bg-primary);
+}
+
+.message-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.message-input::placeholder {
+  color: var(--text-light);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: white;
+  color: var(--primary-blue);
+  border: 2px solid var(--primary-blue);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: var(--spacing-sm);
+}
+
+.btn-secondary:hover {
+  background: var(--primary-blue);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary svg {
+  transition: transform 0.3s;
+}
+
+.btn-secondary:hover svg {
+  transform: rotate(180deg);
+}
+
+.messages-container {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-height: 200px;
+}
+
+.no-messages {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+  font-style: italic;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--border-color);
+}
+
+.message-item {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--primary-blue);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease;
+}
+
+.message-item:hover {
+  border-left-color: var(--primary-blue-light);
+  box-shadow: var(--shadow-md);
+  transform: translateX(4px);
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.message-label {
+  font-weight: 700;
+  color: var(--primary-blue-dark);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.message-content {
+  color: var(--text-primary);
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.message-id {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: var(--spacing-xs);
+}
+
+/* Loading state for buttons */
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Smooth transitions for all interactive elements */
 a, button, .card, .feature, .info-card {
   transition: all 0.3s ease;

@@ -83,6 +83,43 @@
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-header">
+          <h2>Message Storage</h2>
+          <span class="badge">In-Memory</span>
+        </div>
+        <div class="card-body">
+          <p class="description">Enter a message and see it stored! The last 3 messages are displayed below.</p>
+
+          <div class="message-input-container">
+            <input
+              type="text"
+              id="messageInput"
+              class="message-input"
+              placeholder="Type your message here..."
+              maxlength="200"
+            />
+            <button id="sendMessageBtn" class="btn-primary">
+              <span>Send Message</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <button id="refreshMessagesBtn" class="btn-secondary">
+            <span>Refresh Messages</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <div id="messagesContainer" class="messages-container">
+            <div class="no-messages">No messages yet. Be the first to send one! 📝</div>
+          </div>
+        </div>
+      </div>
+
       <div class="info-grid">
         <div class="info-card">
           <div class="info-label">Region</div>

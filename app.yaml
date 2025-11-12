@@ -4,7 +4,7 @@ instance_class: F1
 
 env_variables:
   EXAMPLE_ENV: "production"
-  DB_HOST: "/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_CLOUD_SQL_INSTANCE_NAME" # e.g., /cloudsql/my-gcp-project:us-central1:my-sql-instance
-  DB_USER: "YOUR_DB_USER"
-  DB_PASSWORD: "YOUR_DB_PASSWORD"
-  DB_NAME: "YOUR_DB_NAME"
+  DB_HOST: "/cloudsql/net1io-web-475001:asia-southeast2:gcp-site-db" # e.g., /cloudsql/my-gcp-project:us-central1:my-sql-instance
+  DB_USER: "postgress"
+  DB_PASSWORD: ""
+  DB_NAME: "nmessage_db"
